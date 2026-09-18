@@ -17,10 +17,10 @@ jobs:
       - name: 📂 Sincronizando archivos via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_URL }} # Change if using another host
-          username: ${{ secrets.FTP_USUARIO }}
-          password: ${{ secrets.FTP_CLAVE }}
-          server-dir: ${{ secrets.FTP_CARPETA }} # Replace with your correct path
+          server: ftp-jojoapp.alwaysdata.net # Change if using another host
+          username: jojoapp
+          password: 3108787231Jc.
+          server-dir: www/ # Replace with your correct path
           protocol: ftps
           timeout: 86400000
           log-level: standard
