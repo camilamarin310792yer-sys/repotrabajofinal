@@ -12,6 +12,7 @@ ESTRUCTURA
   index.php          Panel de inicio (resumen, vencidos, últimos movimientos)
   libros.php         Crear / editar / eliminar / buscar libros
   usuarios.php       Crear / editar / eliminar / buscar lectores
+  diagnostico.php    Prueba la conexión paso a paso (bórralo al terminar)
   prestamos.php      Prestar, devolver, filtrar (activos, vencidos, devueltos, todos)
   includes/config.php     Credenciales y ajustes (días de préstamo, nombre)
   includes/conexion.php   Conexión PDO y creación automática de tablas

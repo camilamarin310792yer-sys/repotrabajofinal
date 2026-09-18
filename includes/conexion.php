@@ -35,7 +35,18 @@ function db(): PDO
         exit;
     }
 
-    instalar_tablas($pdo);
+    // Si falla la creación de tablas, se muestra el error real (antes quedaba página en blanco)
+    try {
+        instalar_tablas($pdo);
+    } catch (PDOException $e) {
+        http_response_code(500);
+        echo '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Error al crear tablas</title>'
+           . '<link rel="stylesheet" href="assets/estilo.css"></head><body><main class="contenido">'
+           . '<section class="pergamino"><h2 class="titulo-seccion">No se pudieron crear las tablas</h2>'
+           . '<p class="detalle-error">' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>'
+           . '<p>Abre <code>diagnostico.php</code> para ver la causa paso a paso.</p></section></main></body></html>';
+        exit;
+    }
     return $pdo;
 }
 
