@@ -1,0 +1,34 @@
+BIBLIOTHECA PALATINA — Gestión de biblioteca en PHP + MySQL
+============================================================
+
+INSTALACIÓN (alwaysdata)
+1. Sube TODO el contenido de esta carpeta a tu sitio (por ejemplo a www/biblioteca/).
+2. Abre https://naderzonweb.alwaysdata.net/biblioteca/ en el navegador.
+3. Listo: la primera carga crea las tablas usuarios, libros y prestamos si no existen.
+
+Requisitos: PHP 7.4 o superior con la extensión PDO MySQL (alwaysdata la trae).
+
+ESTRUCTURA
+  index.php          Panel de inicio (resumen, vencidos, últimos movimientos)
+  libros.php         Crear / editar / eliminar / buscar libros
+  usuarios.php       Crear / editar / eliminar / buscar lectores
+  prestamos.php      Prestar, devolver, filtrar (activos, vencidos, devueltos, todos)
+  includes/config.php     Credenciales y ajustes (días de préstamo, nombre)
+  includes/conexion.php   Conexión PDO y creación automática de tablas
+  includes/funciones.php  Seguridad (CSRF, escape), mensajes, fechas, números romanos
+  includes/cabecera.php, pie.php  Plantilla visual común
+  assets/estilo.css  Todo el diseño (colores en variables al inicio)
+
+REGLAS DE NEGOCIO
+- "Unidades" es el total de ejemplares. Disponibles = unidades - préstamos activos.
+- No se presta un libro sin ejemplares disponibles.
+- Un lector no puede tener dos ejemplares del mismo libro a la vez.
+- No se elimina un libro o lector con préstamos activos.
+- Un préstamo está vencido si no se devolvió y pasó su fecha límite.
+
+SEGURIDAD
+- Consultas preparadas (sin inyección SQL), escape de HTML y token CSRF.
+- includes/.htaccess bloquea el acceso directo a las credenciales.
+- IMPORTANTE: la clave de la BD viajó en texto plano por un chat. Cámbiala en el
+  panel de alwaysdata y actualiza includes/config.php.
+- La app NO tiene inicio de sesión: cualquiera con la URL puede modificar datos.

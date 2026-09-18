@@ -1,0 +1,662 @@
+/* ==================================================================
+   BIBLIOTHECA PALATINA — Hoja de estilos
+   Estética: templo romano en mármol + cerámica griega de figuras negras.
+   Todos los colores están en variables (:root) para cambiarlos fácil.
+   ================================================================== */
+
+/* ---------- 1. Paleta y tipografía ---------- */
+:root {
+    --marmol:        #f5f0e6;
+    --marmol-veta:   #ddd3c1;
+    --marmol-sombra: #c9bda7;
+    --pergamino:     #f1e4c3;
+    --pergamino-osc: #e3cf9f;
+    --tinta:         #2a1c12;
+    --tinta-suave:   #5b4633;
+    --pompeya:       #8e2a1c;   /* rojo pompeyano */
+    --terracota:     #c0633a;   /* arcilla de ánfora */
+    --terracota-osc: #9c4a26;
+    --figura-negra:  #1c1410;   /* barniz negro de vasija */
+    --oro:           #b48a2c;
+    --oro-claro:     #e2c46e;
+    --bronce:        #6b4a2b;
+    --verde-bronce:  #4d6a57;
+
+    --fuente-titulo: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    --fuente-texto:  'Cormorant Garamond', Garamond, 'Times New Roman', serif;
+
+    --radio: 3px;
+    --sombra: 0 2px 0 rgba(28, 20, 16, .15), 0 10px 24px -12px rgba(28, 20, 16, .45);
+
+    /* Grecas (meandro griego) en SVG: una por color */
+    --greca-negra: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 1H16M0 15H16M13.5 15V3.5H3.5V11.5H10V7H7' fill='none' stroke='%231c1410' stroke-width='1.8'/%3E%3C/svg%3E");
+    --greca-crema: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 1H16M0 15H16M13.5 15V3.5H3.5V11.5H10V7H7' fill='none' stroke='%23f3e2bf' stroke-width='1.8'/%3E%3C/svg%3E");
+    --greca-terracota: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 1H16M0 15H16M13.5 15V3.5H3.5V11.5H10V7H7' fill='none' stroke='%23c0633a' stroke-width='1.8'/%3E%3C/svg%3E");
+    --greca-oro: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 1H16M0 15H16M13.5 15V3.5H3.5V11.5H10V7H7' fill='none' stroke='%23e2c46e' stroke-width='1.8'/%3E%3C/svg%3E");
+    /* Ovas y dardos (friso jónico) para el entablamento */
+    --ovas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='14' viewBox='0 0 22 14'%3E%3Cellipse cx='11' cy='6' rx='6' ry='6.5' fill='none' stroke='%23b48a2c' stroke-width='1.4'/%3E%3Cellipse cx='11' cy='6' rx='3' ry='4' fill='%23b48a2c' opacity='.45'/%3E%3Cpath d='M0 0V13M22 0V13' stroke='%23b48a2c' stroke-width='1.2'/%3E%3C/svg%3E");
+}
+
+/* ---------- 2. Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 17px; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: var(--fuente-texto);
+    font-weight: 500;
+    color: var(--tinta);
+    line-height: 1.5;
+    /* Mármol: base clara + vetas diagonales suaves */
+    background-color: var(--marmol);
+    background-image:
+        radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.9), transparent 55%),
+        radial-gradient(ellipse at 85% 80%, rgba(201,189,167,.35), transparent 60%),
+        linear-gradient(115deg, transparent 40%, rgba(170,155,130,.18) 41%, transparent 43%),
+        linear-gradient(160deg, transparent 62%, rgba(170,155,130,.14) 63%, transparent 64.5%),
+        linear-gradient(35deg,  transparent 75%, rgba(170,155,130,.12) 76%, transparent 77%);
+    background-attachment: fixed;
+}
+
+a { color: var(--pompeya); }
+a:hover { color: var(--terracota-osc); }
+
+:focus-visible {
+    outline: 3px solid var(--oro);
+    outline-offset: 2px;
+}
+
+.saltar {
+    position: absolute; left: -999px; top: 0;
+    background: var(--figura-negra); color: var(--oro-claro);
+    padding: .5rem 1rem; z-index: 10;
+}
+.saltar:focus { left: 1rem; }
+
+code {
+    background: rgba(28,20,16,.08);
+    padding: .1rem .35rem;
+    border-radius: 2px;
+}
+
+/* ---------- 3. Columnas dóricas decorativas ---------- */
+.columna {
+    display: none;
+    position: fixed;
+    top: 0; bottom: 0;
+    width: 64px;
+    z-index: 0;
+    pointer-events: none;
+    /* Estrías verticales del fuste */
+    background:
+        repeating-linear-gradient(90deg,
+            #e9e1d1 0, #fbf8f2 5px, #d9cdb6 10px, #e9e1d1 12px);
+    box-shadow: inset -8px 0 14px rgba(0,0,0,.12), inset 8px 0 14px rgba(255,255,255,.5);
+}
+.columna::before,             /* capitel */
+.columna::after {             /* basa */
+    content: '';
+    position: absolute;
+    left: -10px; right: -10px;
+    height: 22px;
+    background: linear-gradient(#efe7d8, #cfc3aa);
+    border: 1px solid var(--marmol-sombra);
+}
+.columna::before { top: 0; }
+.columna::after  { bottom: 0; }
+.columna-izq { left: 14px; }
+.columna-der { right: 14px; }
+
+@media (min-width: 1380px) {
+    .columna { display: block; }
+}
+
+/* ---------- 4. Cabecera: frontón + entablamento ---------- */
+.templo {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    width: calc(100% - 2rem);
+    margin: 1.25rem auto 0;
+    text-align: center;
+}
+
+/* Frontón triangular con borde dorado (dos triángulos superpuestos) */
+.fronton {
+    position: relative;
+    height: 92px;
+    margin: 0 auto;
+    background: linear-gradient(var(--oro), var(--bronce));
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+.fronton-interior {
+    position: absolute;
+    inset: 5px 10px 0;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    background:
+        radial-gradient(ellipse at 50% 90%, #fffdf8, transparent 70%),
+        linear-gradient(#efe7d8, #d8ccb3);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1rem;
+    padding-bottom: .8rem;
+}
+.fronton-texto {
+    font-family: var(--fuente-titulo);
+    font-weight: 900;
+    letter-spacing: .35em;
+    color: var(--pompeya);
+    font-size: 1rem;
+}
+.laurel { color: var(--verde-bronce); font-size: 1.2rem; }
+.laurel-der { transform: scaleX(-1); display: inline-block; }
+
+.entablamento {
+    background: linear-gradient(#fbf8f1, #e7ddca);
+    border-top: 4px solid var(--oro);
+    border-bottom: 1px solid var(--marmol-sombra);
+    padding: 1rem 1rem .9rem;
+    position: relative;
+}
+.entablamento::before {       /* friso de ovas */
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 14px;
+    background: var(--ovas) repeat-x center;
+    opacity: .9;
+}
+.entablamento h1 {
+    margin: .6rem 0 .1rem;
+    font-family: var(--fuente-titulo);
+    font-weight: 900;
+    font-size: clamp(1.6rem, 4.5vw, 2.8rem);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--tinta);
+    text-shadow: 0 1px 0 #fff, 0 2px 0 rgba(180,138,44,.35);
+}
+.lema {
+    margin: 0;
+    font-style: italic;
+    color: var(--tinta-suave);
+    font-size: 1.05rem;
+}
+
+/* Bandas de greca */
+.greca {
+    height: 16px;
+    background-repeat: repeat-x;
+    background-size: 16px 16px;
+}
+.greca-oro     { background-color: var(--figura-negra); background-image: var(--greca-oro); }
+.greca-oscura  { background-color: var(--terracota);    background-image: var(--greca-negra); }
+
+/* ---------- 5. BOTONES con fondos de la antigua Grecia ----------
+   Cada botón imita una vasija: cuerpo de color + bandas de greca
+   arriba y abajo, como las franjas decorativas de un ánfora.       */
+.btn {
+    --banda: var(--greca-negra);
+    --fondo: linear-gradient(#d27449, var(--terracota) 55%, var(--terracota-osc));
+    --texto: var(--figura-negra);
+
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .05rem;
+    min-height: 2.9rem;
+    padding: 1rem 1.3rem;
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    font-size: .82rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    line-height: 1.1;
+    color: var(--texto);
+    cursor: pointer;
+    border: 2px solid var(--figura-negra);
+    border-radius: var(--radio);
+    background:
+        var(--banda) repeat-x left top / 12px 12px,
+        var(--banda) repeat-x left bottom / 12px 12px,
+        var(--fondo);
+    box-shadow: 0 3px 0 var(--figura-negra), 0 8px 14px -8px rgba(0,0,0,.55);
+    transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    white-space: nowrap;
+}
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 var(--figura-negra), 0 12px 18px -8px rgba(0,0,0,.55);
+    filter: brightness(1.06);
+    color: var(--texto);
+}
+.btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 var(--figura-negra);
+}
+
+/* Variante terracota: ánfora de figuras negras (por defecto) */
+.btn-terracota { /* usa los valores base */ }
+
+/* Variante negra: vasija de figuras rojas */
+.btn-negro {
+    --banda: var(--greca-terracota);
+    --fondo: radial-gradient(ellipse at 50% 30%, #3a2a20, var(--figura-negra) 70%);
+    --texto: #f0c9a4;
+}
+
+/* Variante oro: bronce pulido con greca negra */
+.btn-oro {
+    --banda: var(--greca-negra);
+    --fondo: linear-gradient(#f0d785, var(--oro-claro) 40%, var(--oro));
+    --texto: var(--figura-negra);
+}
+
+/* Variante mármol: secundaria, discreta */
+.btn-marmol {
+    --banda: var(--greca-terracota);
+    --fondo: linear-gradient(#fffdf8, #e9e0cf);
+    --texto: var(--tinta);
+    border-color: var(--bronce);
+    box-shadow: 0 3px 0 var(--bronce), 0 8px 14px -8px rgba(0,0,0,.35);
+}
+
+/* Botón pequeño (acciones de tabla) */
+.btn-chico {
+    min-height: 2.1rem;
+    padding: .62rem .75rem;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    background-size: 9px 9px, 9px 9px, auto;
+    box-shadow: 0 2px 0 var(--figura-negra);
+}
+.btn-marmol.btn-chico { box-shadow: 0 2px 0 var(--bronce); }
+
+/* Botones del menú principal: nombre latino + español */
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .9rem;
+    padding: 1.2rem 0 .4rem;
+}
+.btn-nav {
+    --banda: var(--greca-terracota);
+    --fondo: radial-gradient(ellipse at 50% 20%, #3b2b20, var(--figura-negra) 75%);
+    --texto: var(--oro-claro);
+    min-width: 150px;
+    padding: 1.05rem 1.4rem;
+}
+.btn-nav.activo {
+    --banda: var(--greca-negra);
+    --fondo: linear-gradient(#d27449, var(--terracota) 55%, var(--terracota-osc));
+    --texto: var(--figura-negra);
+}
+.btn-latin { font-size: .95rem; font-weight: 900; }
+.btn-sub {
+    font-family: var(--fuente-texto);
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: .02em;
+    font-size: .88rem;
+    font-weight: 600;
+    opacity: .85;
+}
+
+/* ---------- 6. Contenido ---------- */
+.contenido {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    max-width: 1200px;
+    width: calc(100% - 2rem);
+    margin: 1.4rem auto 2.5rem;
+}
+
+/* Pergamino: tarjeta principal */
+.pergamino {
+    position: relative;
+    background:
+        radial-gradient(ellipse at 30% 0%, rgba(255,255,255,.55), transparent 60%),
+        linear-gradient(180deg, var(--pergamino), var(--pergamino-osc));
+    border: 1px solid var(--bronce);
+    outline: 1px solid var(--oro);
+    outline-offset: -6px;
+    border-radius: var(--radio);
+    padding: 1.6rem 1.5rem 1.4rem;
+    box-shadow: var(--sombra);
+    margin-bottom: 1.4rem;
+    min-width: 0;
+}
+/* Rodillos del rollo arriba y abajo */
+.pergamino::before,
+.pergamino::after {
+    content: '';
+    position: absolute;
+    left: -6px; right: -6px;
+    height: 7px;
+    border-radius: 6px;
+    background: linear-gradient(#8a6a3f, var(--bronce) 50%, #4a3220);
+    box-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+.pergamino::before { top: -4px; }
+.pergamino::after  { bottom: -4px; }
+
+/* Tablilla: variante para formularios (tablilla de cera enmarcada) */
+.tablilla {
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.35), transparent 30%),
+        linear-gradient(#e8d6a8, #d9c28a);
+}
+
+.titulo-seccion {
+    margin: 0 0 1rem;
+    font-family: var(--fuente-titulo);
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--pompeya);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+.titulo-seccion::before {
+    content: '';
+    width: 22px; height: 11px;
+    background: var(--greca-negra) repeat-x 0 0 / 11px 11px;
+    flex-shrink: 0;
+}
+.titulo-seccion small {
+    font-family: var(--fuente-texto);
+    font-size: .95rem;
+    color: var(--tinta-suave);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+/* Rejillas de maquetación */
+.rejilla-formulario {
+    display: grid;
+    grid-template-columns: minmax(270px, 340px) 1fr;
+    gap: 1.4rem;
+    align-items: start;
+}
+.rejilla-dos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.4rem;
+    align-items: start;
+}
+
+/* ---------- 7. Formularios ---------- */
+.formulario { display: grid; gap: .95rem; }
+.formulario label {
+    display: grid;
+    gap: .3rem;
+    font-family: var(--fuente-titulo);
+    font-size: .74rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--bronce);
+}
+input[type=text], input[type=tel], input[type=number],
+input[type=date], input[type=search], select {
+    width: 100%;
+    font-family: var(--fuente-texto);
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--tinta);
+    background: rgba(255, 252, 244, .85);
+    border: 1px solid var(--marmol-sombra);
+    border-bottom: 2px solid var(--bronce);
+    border-radius: 2px;
+    padding: .55rem .7rem;
+    transition: border-color .15s, background .15s;
+}
+input:focus, select:focus {
+    outline: none;
+    background: #fffdf7;
+    border-bottom-color: var(--terracota);
+    box-shadow: 0 2px 0 var(--oro-claro);
+}
+.botonera { display: flex; gap: .7rem; flex-wrap: wrap; margin-top: .3rem; }
+
+.cabecera-lista {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+    margin-bottom: 1rem;
+}
+.cabecera-lista .titulo-seccion { margin: 0; }
+.buscador { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
+.buscador input { width: 250px; max-width: 100%; }
+.pestanas { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+/* ---------- 8. Tablas ---------- */
+.tabla-envoltura { overflow-x: auto; margin: 0 -.3rem; }
+.tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.02rem;
+}
+.tabla th {
+    font-family: var(--fuente-titulo);
+    font-size: .7rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--oro-claro);
+    background: var(--figura-negra);
+    padding: .65rem .6rem;
+    white-space: nowrap;
+}
+.tabla th:first-child { border-top-left-radius: 2px; }
+.tabla th:last-child  { border-top-right-radius: 2px; }
+.tabla td {
+    padding: .6rem;
+    border-bottom: 1px dashed rgba(107, 74, 43, .35);
+    vertical-align: middle;
+}
+.tabla tbody tr:nth-child(even) td { background: rgba(255,255,255,.22); }
+.tabla tbody tr:hover td { background: rgba(226,196,110,.25); }
+.tabla .num { text-align: center; }
+.fila-activa td { background: rgba(192, 99, 58, .15) !important; }
+.fila-vencida td:first-child { box-shadow: inset 4px 0 0 var(--pompeya); }
+
+.acciones {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    white-space: nowrap;
+}
+.acciones form { margin: 0; }
+
+.sub {
+    display: block;
+    font-size: .85rem;
+    color: var(--tinta-suave);
+    font-style: italic;
+}
+.sub-inline { color: var(--tinta-suave); }
+.codigo {
+    font-family: var(--fuente-titulo);
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--bronce);
+}
+
+/* Sellos de estado (como sellos de lacre) */
+.sello {
+    display: inline-block;
+    min-width: 2rem;
+    text-align: center;
+    padding: .12rem .6rem;
+    border-radius: 999px;
+    font-family: var(--fuente-titulo);
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    border: 1px solid rgba(0,0,0,.25);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.3);
+}
+.sello-activo   { background: var(--oro-claro); color: var(--figura-negra); }
+.sello-vencido  { background: var(--pompeya);   color: #f8e3d4; }
+.sello-devuelto { background: var(--verde-bronce); color: #eef3e8; }
+
+/* ---------- 9. Panel de inicio ---------- */
+.teselas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.4rem;
+}
+/* Tesela: bloque tipo mosaico con borde de greca */
+.tesela {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    padding: 1.3rem .8rem 1rem;
+    background:
+        var(--greca-oro) repeat-x left top / 12px 12px,
+        radial-gradient(ellipse at 50% 30%, #3a2a20, var(--figura-negra) 75%);
+    border: 2px solid var(--oro);
+    border-radius: var(--radio);
+    box-shadow: var(--sombra);
+    color: var(--marmol);
+    text-align: center;
+}
+.tesela-alerta {
+    background:
+        var(--greca-negra) repeat-x left top / 12px 12px,
+        linear-gradient(#a8392a, var(--pompeya));
+    border-color: var(--figura-negra);
+}
+.tesela-romano {
+    font-family: var(--fuente-titulo);
+    font-size: .75rem;
+    letter-spacing: .15em;
+    color: var(--oro-claro);
+    min-height: 1.1em;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.tesela-numero {
+    font-family: var(--fuente-titulo);
+    font-weight: 900;
+    font-size: 2.4rem;
+    line-height: 1.1;
+}
+.tesela-etiqueta {
+    font-style: italic;
+    font-size: 1.02rem;
+    opacity: .9;
+}
+
+.acciones-rapidas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .9rem;
+    justify-content: center;
+    margin-bottom: 1.6rem;
+}
+
+.bitacora { list-style: none; margin: 0; padding: 0; }
+.bitacora li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: .7rem;
+    align-items: center;
+    padding: .55rem 0;
+    border-bottom: 1px dashed rgba(107, 74, 43, .35);
+}
+.bitacora time { font-style: italic; color: var(--tinta-suave); font-size: .92rem; white-space: nowrap; }
+
+.vacio { font-style: italic; color: var(--tinta-suave); margin: .3rem 0; }
+.enlace-mas {
+    display: inline-block;
+    margin-top: .8rem;
+    font-family: var(--fuente-titulo);
+    font-size: .75rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+.detalle-error {
+    font-family: monospace;
+    font-size: .85rem;
+    background: rgba(142,42,28,.1);
+    padding: .6rem;
+    border-left: 3px solid var(--pompeya);
+    word-break: break-word;
+}
+
+/* ---------- 10. Avisos ---------- */
+.aviso {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    padding: .8rem 1.1rem;
+    margin-bottom: 1.1rem;
+    border: 2px solid var(--figura-negra);
+    border-radius: var(--radio);
+    font-weight: 600;
+    font-size: 1.05rem;
+    box-shadow: var(--sombra);
+    transition: opacity .5s, transform .5s;
+}
+.aviso-exito { background: #dfe8d6; color: #24382b; border-color: var(--verde-bronce); }
+.aviso-error { background: #f3d6cc; color: #5e1a10; border-color: var(--pompeya); }
+.aviso-icono { font-size: 1.2rem; }
+.aviso.oculto { opacity: 0; transform: translateY(-6px); pointer-events: none; }
+
+/* ---------- 11. Pie ---------- */
+.pie { position: relative; z-index: 1; text-align: center; }
+.basamento {
+    background: linear-gradient(#2a1f18, var(--figura-negra));
+    color: var(--marmol-veta);
+    padding: 1.1rem 1rem 1.3rem;
+    font-size: .95rem;
+}
+.basamento p { margin: .15rem 0; }
+.pie-titulo {
+    font-family: var(--fuente-titulo);
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    color: var(--oro-claro);
+}
+
+/* ---------- 12. Responsive ---------- */
+@media (max-width: 920px) {
+    .rejilla-formulario,
+    .rejilla-dos { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+    html { font-size: 16px; }
+    .fronton { height: 64px; }
+    .fronton-texto { font-size: .75rem; letter-spacing: .2em; }
+    .laurel { display: none; }
+    .menu { gap: .55rem; }
+    .btn-nav { min-width: calc(50% - .3rem); padding: .9rem .6rem; }
+    .pergamino { padding: 1.3rem 1rem 1.1rem; }
+    .buscador input { width: 100%; }
+    .bitacora li { grid-template-columns: 1fr; gap: .2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+}

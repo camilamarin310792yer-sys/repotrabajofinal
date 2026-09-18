@@ -1,65 +1,132 @@
 <?php
-require_once __DIR__.'/config.php';
+/* ============================================================
+   ATRIUM — Panel de inicio con resumen de la biblioteca
+   ============================================================ */
+require_once __DIR__ . '/includes/funciones.php';
 $pdo = db();
-$pdo->exec
-("CREATE TABLE IF NOT EXISTS usuarios (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,nombre VARCHAR(150) NOT NULL,cedula VARCHAR(40) NOT NULL UNIQUE,telefono VARCHAR(40) NOT NULL,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$pdo->exec
-("CREATE TABLE IF NOT EXISTS libros (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,codigo VARCHAR(50) NOT NULL UNIQUE,titulo VARCHAR(200) NOT NULL,autor VARCHAR(150) NOT NULL,unidades INT UNSIGNED NOT NULL DEFAULT 0,created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$pdo->exec
-("CREATE TABLE IF NOT EXISTS prestamos (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,usuario_id INT UNSIGNED NOT NULL,libro_id INT UNSIGNED NOT NULL,cantidad INT UNSIGNED NOT NULL DEFAULT 1,fecha_prestamo DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,fecha_devolucion DATETIME NULL,estado ENUM('prestado','devuelto') NOT NULL DEFAULT 'prestado',INDEX(usuario_id),INDEX(libro_id),CONSTRAINT fk_prestamo_usuario FOREIGN KEY(usuario_id) REFERENCES usuarios(id),CONSTRAINT fk_prestamo_libro FOREIGN KEY(libro_id) REFERENCES libros(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$section=$_GET['section']??'inicio';
-function h($v){return htmlspecialchars((string)$v,ENT_QUOTES,'UTF-8');}
-$flash='';
-if ($_SERVER['REQUEST_METHOD']==='POST') {
-    $action=$_POST['action']??'';
-    try {
-        if($action==='usuario_add'){
-            $s=$pdo->prepare("INSERT INTO usuarios(nombre,cedula,telefono) VALUES(?,?,?)"); $s->execute([trim($_POST['nombre']),trim($_POST['cedula']),trim($_POST['telefono'])]); $flash='Usuario registrado.';
-        } elseif($action==='usuario_delete'){
-            $s=$pdo->prepare("DELETE FROM usuarios WHERE id=?"); $s->execute([(int)$_POST['id']]); $flash='Usuario eliminado.';
-        } elseif($action==='libro_add'){
-            $s=$pdo->prepare("INSERT INTO libros(codigo,titulo,autor,unidades) VALUES(?,?,?,?)"); $s->execute([trim($_POST['codigo']),trim($_POST['titulo']),trim($_POST['autor']),(int)$_POST['unidades']]); $flash='Libro registrado.';
-        } elseif($action==='libro_delete'){
-            $s=$pdo->prepare("DELETE FROM libros WHERE id=?"); $s->execute([(int)$_POST['id']]); $flash='Libro eliminado.';
-        } elseif($action==='prestamo_add'){
-            $pdo->beginTransaction();
-            $libro=(int)$_POST['libro_id']; $cant=max(1,(int)$_POST['cantidad']);
-            $s=$pdo->prepare("SELECT unidades FROM libros WHERE id=? FOR UPDATE"); $s->execute([$libro]); $stock=(int)$s->fetchColumn();
-            if($stock<$cant) throw new Exception("No hay suficientes unidades disponibles.");
-            $s=$pdo->prepare("INSERT INTO prestamos(usuario_id,libro_id,cantidad) VALUES(?,?,?)"); $s->execute([(int)$_POST['usuario_id'],$libro,$cant]);
-            $s=$pdo->prepare("UPDATE libros SET unidades=unidades-? WHERE id=?"); $s->execute([$cant,$libro]);
-            $pdo->commit(); $flash='Préstamo registrado.';
-        } elseif($action==='devolver'){
-            $pdo->beginTransaction();
-            $id=(int)$_POST['id']; $s=$pdo->prepare("SELECT libro_id,cantidad,estado FROM prestamos WHERE id=? FOR UPDATE"); $s->execute([$id]); $p=$s->fetch();
-            if(!$p || $p['estado']!=='prestado') throw new Exception('El préstamo ya fue devuelto o no existe.');
-            $pdo->prepare("UPDATE prestamos SET estado='devuelto',fecha_devolucion=NOW() WHERE id=?")->execute([$id]);
-            $pdo->prepare("UPDATE libros SET unidades=unidades+? WHERE id=?")->execute([(int)$p['cantidad'],(int)$p['libro_id']]);
-            $pdo->commit(); $flash='Libro devuelto correctamente.';
-        }
-    } catch(Throwable $e){ if($pdo->inTransaction())$pdo->rollBack(); $flash='Error: '.$e->getMessage(); }
-}
-$usuarios=$pdo->query("SELECT * FROM usuarios ORDER BY nombre")->fetchAll();
-$libros=$pdo->query("SELECT * FROM libros ORDER BY titulo")->fetchAll();
-$prestamos=$pdo->query("SELECT p.*,u.nombre usuario,l.titulo libro,l.codigo FROM prestamos p JOIN usuarios u ON u.id=p.usuario_id JOIN libros l ON l.id=p.libro_id ORDER BY p.id DESC")->fetchAll();
-$stats=[
-'usuarios'=>(int)$pdo->query("SELECT COUNT(*) FROM usuarios")->fetchColumn(),
-'libros'=>(int)$pdo->query("SELECT COUNT(*) FROM libros")->fetchColumn(),
-'unidades'=>(int)$pdo->query("SELECT COALESCE(SUM(unidades),0) FROM libros")->fetchColumn(),
-'activos'=>(int)$pdo->query("SELECT COUNT(*) FROM prestamos WHERE estado='prestado'")->fetchColumn()
-];
+
+// Totales generales
+$totalUsuarios  = (int)$pdo->query('SELECT COUNT(*) FROM usuarios')->fetchColumn();
+$totalTitulos   = (int)$pdo->query('SELECT COUNT(*) FROM libros')->fetchColumn();
+$totalEjemplares = (int)$pdo->query('SELECT COALESCE(SUM(unidades),0) FROM libros')->fetchColumn();
+$totalActivos   = (int)$pdo->query('SELECT COUNT(*) FROM prestamos WHERE fecha_devolucion IS NULL')->fetchColumn();
+
+$st = $pdo->prepare('SELECT COUNT(*) FROM prestamos WHERE fecha_devolucion IS NULL AND fecha_limite < ?');
+$st->execute([hoy()]);
+$totalVencidos = (int)$st->fetchColumn();
+
+$disponibles = max(0, $totalEjemplares - $totalActivos);
+
+// Préstamos vencidos (los más urgentes primero)
+$st = $pdo->prepare('
+    SELECT p.id, p.fecha_limite, u.nombre, u.telefono, l.titulo
+    FROM prestamos p
+    JOIN usuarios u ON u.id = p.usuario_id
+    JOIN libros   l ON l.id = p.libro_id
+    WHERE p.fecha_devolucion IS NULL AND p.fecha_limite < ?
+    ORDER BY p.fecha_limite ASC
+    LIMIT 8
+');
+$st->execute([hoy()]);
+$vencidos = $st->fetchAll();
+
+// Últimos movimientos
+$recientes = $pdo->query('
+    SELECT p.fecha_prestamo, p.fecha_devolucion, p.fecha_limite, u.nombre, l.titulo
+    FROM prestamos p
+    JOIN usuarios u ON u.id = p.usuario_id
+    JOIN libros   l ON l.id = p.libro_id
+    ORDER BY p.id DESC
+    LIMIT 8
+')->fetchAll();
+
+$titulo = 'Atrium';
+$pagina = 'index.php';
+require __DIR__ . '/includes/cabecera.php';
 ?>
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Biblioteca Romana</title><link rel="stylesheet" href="assets/style.css"></head>
-<body class="roman-bg"><div class="columns"></div><header class="top"><div class="brand"><span class="laurel">❦</span><div><div class="eyebrow">SENATUS LIBRARIA</div><h1>Biblioteca Romana</h1></div></div>
-<nav><a class="<?= $section==='inicio'?'active':''?>" href="?section=inicio">🏛 Inicio</a><a class="<?= $section==='usuarios'?'active':''?>" href="?section=usuarios">👥 Usuarios</a><a class="<?= $section==='libros'?'active':''?>" href="?section=libros">📜 Libros</a><a class="<?= $section==='prestamos'?'active':''?>" href="?section=prestamos">⚖ Préstamos</a></nav></header>
-<main class="wrap"><?php if($flash): ?><div class="alert <?=str_starts_with($flash,'Error')?'error':'ok'?>"><?=h($flash)?></div><?php endif; ?>
-<?php if($section==='inicio'): ?><section class="hero card"><div><span class="seal">SPQR</span><h2>Sabiduría, memoria y conocimiento.</h2><p>Administra usuarios, libros y préstamos desde una biblioteca inspirada en la arquitectura clásica de Roma.</p><a class="btn" href="?section=prestamos">Gestionar préstamos</a></div><div class="statue">🏛️</div></section>
-<div class="grid4"><div class="stat card"><b><?=$stats['usuarios']?></b><span>Usuarios</span></div><div class="stat card"><b><?=$stats['libros']?></b><span>Títulos</span></div><div class="stat card"><b><?=$stats['unidades']?></b><span>Unidades disponibles</span></div><div class="stat card"><b><?=$stats['activos']?></b><span>Préstamos activos</span></div></div>
-<section class="card"><h2>Cómo comenzar</h2><div class="steps"><div><b>I</b>Registra usuarios</div><div><b>II</b>Registra libros y existencias</div><div><b>III</b>Genera préstamos</div><div><b>IV</b>Registra las devoluciones</div></div></section>
-<?php elseif($section==='usuarios'): ?><section class="card"><h2>👥 Ciudadanos de la Biblioteca</h2><form method="post" class="formgrid"><input type="hidden" name="action" value="usuario_add"><label>Nombre<input required name="nombre"></label><label>Cédula<input required name="cedula"></label><label>Teléfono<input required name="telefono"></label><button class="btn" type="submit">Registrar usuario</button></form></section>
-<section class="card"><h2>Registro de usuarios</h2><div class="tablewrap"><table><tr><th>ID</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Acción</th></tr><?php foreach($usuarios as $u): ?><tr><td><?=h($u['id'])?></td><td><?=h($u['nombre'])?></td><td><?=h($u['cedula'])?></td><td><?=h($u['telefono'])?></td><td><form method="post" onsubmit="return confirm('¿Eliminar usuario?')"><input type="hidden" name="action" value="usuario_delete"><input type="hidden" name="id" value="<?=$u['id']?>"><button class="btn danger">Eliminar</button></form></td></tr><?php endforeach; ?></table></div></section>
-<?php elseif($section==='libros'): ?><section class="card"><h2>📜 Catálogo de pergaminos</h2><form method="post" class="formgrid"><input type="hidden" name="action" value="libro_add"><label>Código<input required name="codigo"></label><label>Título<input required name="titulo"></label><label>Autor<input required name="autor"></label><label>Unidades<input required min="0" type="number" name="unidades"></label><button class="btn" type="submit">Agregar libro</button></form></section>
-<section class="card"><h2>Inventario</h2><div class="tablewrap"><table><tr><th>Código</th><th>Título</th><th>Autor</th><th>Disponibles</th><th>Acción</th></tr><?php foreach($libros as $l): ?><tr><td><?=h($l['codigo'])?></td><td><?=h($l['titulo'])?></td><td><?=h($l['autor'])?></td><td><span class="pill <?=$l['unidades']==0?'empty':''?>"><?=h($l['unidades'])?></span></td><td><form method="post" onsubmit="return confirm('¿Eliminar libro?')"><input type="hidden" name="action" value="libro_delete"><input type="hidden" name="id" value="<?=$l['id']?>"><button class="btn danger">Eliminar</button></form></td></tr><?php endforeach; ?></table></div></section>
-<?php elseif($section==='prestamos'): ?><section class="card"><h2>⚖ Registrar nuevo préstamo</h2><form method="post" class="formgrid"><input type="hidden" name="action" value="prestamo_add"><label>Usuario<select required name="usuario_id"><option value="">Seleccione...</option><?php foreach($usuarios as $u): ?><option value="<?=$u['id']?>"><?=h($u['nombre'])?> — <?=h($u['cedula'])?></option><?php endforeach; ?></select></label><label>Libro<select required name="libro_id"><option value="">Seleccione...</option><?php foreach($libros as $l): ?><option value="<?=$l['id']?>" <?=$l['unidades']==0?'disabled':''?>><?=h($l['titulo'])?> — disponibles: <?=$l['unidades']?></option><?php endforeach; ?></select></label><label>Cantidad<input required min="1" type="number" name="cantidad" value="1"></label><button class="btn" type="submit">Otorgar préstamo</button></form></section>
-<section class="card"><h2>Libro mayor de préstamos</h2><div class="tablewrap"><table><tr><th>Usuario</th><th>Libro</th><th>Cant.</th><th>Fecha</th><th>Estado</th><th>Acción</th></tr><?php foreach($prestamos as $p): ?><tr><td><?=h($p['usuario'])?></td><td><?=h($p['titulo'])?><small><?=h($p['codigo'])?></small></td><td><?=h($p['cantidad'])?></td><td><?=h($p['fecha_prestamo'])?></td><td><span class="pill <?=$p['estado']==='devuelto'?'returned':'borrowed'?>"><?=h($p['estado'])?></span></td><td><?php if($p['estado']==='prestado'): ?><form method="post"><input type="hidden" name="action" value="devolver"><input type="hidden" name="id" value="<?=$p['id']?>"><button class="btn">Registrar devolución</button></form><?php else: ?>—<?php endif; ?></td></tr><?php endforeach; ?></table></div></section><?php endif; ?></main>
-<footer>✦ SPQR · Biblioteca Romana · Sistema PHP + MySQL ✦</footer></body></html>
+
+<section class="teselas" aria-label="Resumen">
+    <article class="tesela">
+        <span class="tesela-romano"><?= romano($totalTitulos) ?></span>
+        <span class="tesela-numero"><?= $totalTitulos ?></span>
+        <span class="tesela-etiqueta">Títulos</span>
+    </article>
+    <article class="tesela">
+        <span class="tesela-romano"><?= romano($totalEjemplares) ?></span>
+        <span class="tesela-numero"><?= $totalEjemplares ?></span>
+        <span class="tesela-etiqueta">Ejemplares</span>
+    </article>
+    <article class="tesela">
+        <span class="tesela-romano"><?= romano($disponibles) ?></span>
+        <span class="tesela-numero"><?= $disponibles ?></span>
+        <span class="tesela-etiqueta">Disponibles</span>
+    </article>
+    <article class="tesela">
+        <span class="tesela-romano"><?= romano($totalUsuarios) ?></span>
+        <span class="tesela-numero"><?= $totalUsuarios ?></span>
+        <span class="tesela-etiqueta">Lectores</span>
+    </article>
+    <article class="tesela">
+        <span class="tesela-romano"><?= romano($totalActivos) ?></span>
+        <span class="tesela-numero"><?= $totalActivos ?></span>
+        <span class="tesela-etiqueta">En préstamo</span>
+    </article>
+    <article class="tesela<?= $totalVencidos ? ' tesela-alerta' : '' ?>">
+        <span class="tesela-romano"><?= romano($totalVencidos) ?></span>
+        <span class="tesela-numero"><?= $totalVencidos ?></span>
+        <span class="tesela-etiqueta">Vencidos</span>
+    </article>
+</section>
+
+<div class="acciones-rapidas">
+    <a class="btn btn-terracota" href="prestamos.php">Registrar préstamo</a>
+    <a class="btn btn-oro" href="libros.php">Añadir libro</a>
+    <a class="btn btn-negro" href="usuarios.php">Inscribir lector</a>
+</div>
+
+<div class="rejilla-dos">
+    <section class="pergamino">
+        <h2 class="titulo-seccion">Plazos vencidos</h2>
+        <?php if (!$vencidos): ?>
+            <p class="vacio">Ningún volumen fuera de plazo. Minerva está satisfecha.</p>
+        <?php else: ?>
+            <div class="tabla-envoltura">
+                <table class="tabla">
+                    <thead><tr><th>Lector</th><th>Libro</th><th>Límite</th></tr></thead>
+                    <tbody>
+                    <?php foreach ($vencidos as $v): ?>
+                        <tr>
+                            <td><?= e($v['nombre']) ?><small class="sub"><?= e($v['telefono']) ?></small></td>
+                            <td><?= e($v['titulo']) ?></td>
+                            <td><span class="sello sello-vencido"><?= e(fecha_corta($v['fecha_limite'])) ?></span></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <a class="enlace-mas" href="prestamos.php?filtro=vencidos">Ver todos los vencidos →</a>
+        <?php endif; ?>
+    </section>
+
+    <section class="pergamino">
+        <h2 class="titulo-seccion">Últimos movimientos</h2>
+        <?php if (!$recientes): ?>
+            <p class="vacio">Aún no hay préstamos registrados.</p>
+        <?php else: ?>
+            <ul class="bitacora">
+                <?php foreach ($recientes as $r):
+                    $devuelto = $r['fecha_devolucion'] !== null; ?>
+                    <li>
+                        <span class="sello <?= $devuelto ? 'sello-devuelto' : 'sello-activo' ?>">
+                            <?= $devuelto ? 'Devuelto' : 'Prestado' ?>
+                        </span>
+                        <span><strong><?= e($r['titulo']) ?></strong> — <?= e($r['nombre']) ?></span>
+                        <time><?= e(fecha_corta($devuelto ? $r['fecha_devolucion'] : $r['fecha_prestamo'])) ?></time>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+    </section>
+</div>
+
+<?php require __DIR__ . '/includes/pie.php'; ?>
