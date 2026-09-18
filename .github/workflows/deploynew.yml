@@ -2,8 +2,8 @@ name: 🚀 Tarea de Despliegue
 
 on:
    push:
-     branches: 
-      - main
+     branches: yeris
+    
        
 
 jobs:
