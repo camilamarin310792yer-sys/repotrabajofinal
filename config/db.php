@@ -8,7 +8,7 @@
 $DB_HOST = 'mysql-hectorapi.alwaysdata.net';
 $DB_NAME = 'hectorapi_usuario2db';
 $DB_USER = 'hectorapi';
-$DB_PASS = 'pupipi2016';
+$DB_PASS = 'clase1234';
 $DB_CHARSET = 'utf8mb4';
 
 $dsn = "mysql:host={$DB_HOST};dbname={$DB_NAME};charset={$DB_CHARSET}";
