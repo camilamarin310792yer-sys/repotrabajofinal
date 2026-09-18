@@ -3,7 +3,7 @@ name: 🚀 Tarea de Despliegue
 on:
    push:
      branches:
-       - main
+       - jojoapp
 
 jobs:
   deploy:
@@ -27,4 +27,4 @@ jobs:
           exclude: |
            .git/**
            .github/**
-           
+
