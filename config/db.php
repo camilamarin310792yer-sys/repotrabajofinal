@@ -5,7 +5,7 @@
  */
 
 // ==== Credenciales de conexión ====
-$DB_HOST = 'ftp-hectorapi.alwaysdata.net';
+$DB_HOST = 'mysql-hectorapi.alwaysdata.net';
 $DB_NAME = 'hectorapi_usuario2db';
 $DB_USER = 'hectorapi';
 $DB_PASS = 'clase1234';
