@@ -1,0 +1,29 @@
+CREATE DATABASE IF NOT EXISTS hectorapi_usuario2db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE hectorapi_usuario2db;
+
+CREATE TABLE IF NOT EXISTS usuarios (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ nombre VARCHAR(120) NOT NULL,
+ cedula VARCHAR(30) NOT NULL UNIQUE,
+ correo VARCHAR(150) NOT NULL UNIQUE,
+ telefono VARCHAR(30) NOT NULL,
+ creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS libros (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ codigo VARCHAR(40) NOT NULL UNIQUE,
+ titulo VARCHAR(180) NOT NULL,
+ autor VARCHAR(150) NOT NULL,
+ unidades INT NOT NULL DEFAULT 0,
+ creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS prestamos (
+ id INT AUTO_INCREMENT PRIMARY KEY,
+ libro_id INT NOT NULL,
+ usuario_id INT NOT NULL,
+ fecha_prestamo DATE NOT NULL,
+ fecha_devolucion DATE NULL,
+ estado ENUM('Activo','Devuelto') NOT NULL DEFAULT 'Activo',
+ FOREIGN KEY (libro_id) REFERENCES libros(id),
+ FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
