@@ -4,7 +4,7 @@ declare(strict_types=1);
 const DB_HOST = 'mysql-naderzonweb.alwaysdata.net';
 const DB_NAME = 'naderzonweb_trabajofinal';
 const DB_USER = 'naderzonweb';
-const DB_PASS = 'Nm265526%';
+const DB_PASS = 'clase1234';
 
 function db(): PDO {
     static $pdo = null;
