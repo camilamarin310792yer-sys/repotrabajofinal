@@ -5,10 +5,10 @@ final class Database
 {
     public static function connection(): PDO
     {
-        $host = getenv('DB_HOST') ?: 'localhost';
-        $db = getenv('DB_NAME') ?: 'biblioteca_alejandria';
-        $user = getenv('DB_USER') ?: 'root';
-        $pass = getenv('DB_PASS') ?: '';
+        $host = getenv('DB_HOST') ?: 'mysql-naderzonweb.alwaysdata.net';
+        $db = getenv('DB_NAME') ?: 'naderzonweb_biblioteca_alejandria';
+        $user = getenv('DB_USER') ?: 'naderzonweb';
+        $pass = getenv('DB_PASS') ?: 'Nm265526%';
 
         $dsn = "mysql:host={$host};dbname={$db};charset=utf8mb4";
 
